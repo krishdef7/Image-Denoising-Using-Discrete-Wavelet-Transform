@@ -19,8 +19,8 @@ Image denoising is a fundamental problem in digital image processing with applic
 - What are the trade-offs between processing time and quality?
 
 Through hands-on experimentation, this project reveals that:
-- **Wavelet transform excels** on additive Gaussian noise (AWGN) with superior edge preservation
-- **Gaussian/Median filters work better** on salt-and-pepper and speckle noise
+- **Wavelet thresholding** gives the best PSNR on additive Gaussian noise (30.1 dB), but not the best SSIM
+- **Median filtering** dominates salt-and-pepper noise (31.8 dB / SSIM 0.96 vs 19.9 dB / 0.55 for wavelet)
 - **No single algorithm is universally optimal** — the choice depends on noise characteristics
 
 ## ✨ Features
@@ -102,26 +102,21 @@ This creates noisy versions of test images in the `data/` folder with all four n
 
 ## 📊 Key Findings
 
-### Wavelet Transform Performance
+Measured on the `astronaut` test image (`results/awgn/results_summary.csv`, `results/sp/results_summary.csv`):
 
-**Excels on AWGN:**
-- PSNR: 28-35 dB (vs 25-30 dB for Gaussian)
-- SSIM: 0.85-0.95 (excellent structural preservation)
-- Superior edge preservation compared to spatial filters
+| Noise | Median | Gaussian | Fourier | Wavelet (db1, BayesShrink) |
+|---|---|---|---|---|
+| AWGN: PSNR / SSIM | 29.6 dB / **0.80** | 28.8 dB / **0.80** | 28.8 dB / 0.80 | **30.1 dB** / 0.75 |
+| Salt-and-pepper: PSNR / SSIM | **31.8 dB / 0.96** | 26.9 dB / 0.74 | 26.6 dB / 0.72 | 19.9 dB / 0.55 |
 
-**Poor on Speckle/Multiplicative Noise:**
-- PSNR: 20-26 dB (worse than Gaussian/Median)
-- SSIM: 0.55-0.68 (significant quality degradation)
-- **Reason**: Wavelet assumes constant noise variance (additive model), but speckle is signal-dependent (multiplicative)
+- **AWGN:** wavelet thresholding has the best PSNR (+0.5 dB over median) but the lowest SSIM. It removes more
+  noise energy but loses some structure relative to the spatial filters.
+- **Salt-and-pepper:** median filtering wins clearly. Wavelet shrinkage is the worst here: impulse noise is
+  sparse and large, which breaks the Gaussian-noise assumption behind BayesShrink.
+- **No single algorithm wins everywhere.** The right choice depends on the noise model, and PSNR and SSIM can
+  disagree.
 
-### Algorithm Selection Guide
-
-| Noise Type | Best Algorithm | Runner-up |
-|------------|---------------|-----------|
-| AWGN | **Wavelet** | Gaussian |
-| Salt-and-Pepper | **Median** | Wavelet |
-| Speckle | **Gaussian** | Median |
-| Poisson | **Gaussian** | Wavelet |
+Speckle and Poisson noise are supported in the app; their result tables are not committed.
 
 ## 🔬 Technical Details
 
